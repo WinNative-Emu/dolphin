@@ -108,6 +108,23 @@ void Host_PPCBreakpointsChanged()
 {
 }
 
+extern "C" void WnOnGameFrame()
+{
+  static jmethodID s_on_game_frame = nullptr;
+  JNIEnv* env = IDCache::GetEnvForThread();
+  if (!s_on_game_frame)
+  {
+    s_on_game_frame =
+        env->GetStaticMethodID(IDCache::GetNativeLibraryClass(), "onGameFrame", "()V");
+    if (!s_on_game_frame)
+    {
+      env->ExceptionClear();
+      return;
+    }
+  }
+  env->CallStaticVoidMethod(IDCache::GetNativeLibraryClass(), s_on_game_frame);
+}
+
 bool Host_UIBlocksControllerState()
 {
   return false;

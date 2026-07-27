@@ -36,8 +36,15 @@ void PerformanceMetrics::Reset()
   m_frame_presentation_offset = DT{};
 }
 
+#ifdef ANDROID
+extern "C" void WnOnGameFrame();
+#endif
+
 void PerformanceMetrics::CountFrame()
 {
+#ifdef ANDROID
+  WnOnGameFrame();
+#endif
   m_fps_counter.Count();
 }
 

@@ -30,15 +30,15 @@ import org.dolphinemu.dolphinemu.features.netplay.model.SaveTransferProgress
 import org.dolphinemu.dolphinemu.features.netplay.model.TraversalState
 import org.dolphinemu.dolphinemu.features.settings.model.StringSetting
 import org.dolphinemu.dolphinemu.model.GameFile
-import org.dolphinemu.dolphinemu.services.GameFileCacheManager
 
 class NetplaySession(
+    gameFiles: Array<GameFile> = emptyArray(),
     private val onClosed: (NetplaySession) -> Unit,
 ) {
 
     @Keep
     private var netPlayUICallbacksPointer: Long =
-        nativeCreateUICallbacks(GameFileCacheManager.getGameFiles().value ?: emptyArray())
+        nativeCreateUICallbacks(gameFiles)
 
     @Keep
     private var netPlayClientPointer: Long = 0
