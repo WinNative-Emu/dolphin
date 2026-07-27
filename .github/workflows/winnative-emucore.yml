@@ -18,10 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 330
     steps:
+      # Full history and tags: Dolphin derives its version from git describe, and
+      # RetroAchievements rejects a build whose version it cannot parse. A shallow
+      # checkout has no tags, so describe returns a bare hash.
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Install toolchain
         run: |
