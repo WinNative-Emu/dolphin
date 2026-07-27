@@ -8,7 +8,7 @@
 #include <latch>
 #include <mutex>
 #include <string>
-#include <rc_client.h>
+#include <rcheevos/include/rc_client.h>
 #include "Common/Event.h"
 #include "Common/HookableEvent.h"
 #include "Core/AchievementManager.h"
