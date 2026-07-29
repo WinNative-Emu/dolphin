@@ -86,21 +86,19 @@ jobs:
 
       - name: Build
         if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
-        run: ninja -C build-android main hook_impl main_hook gsl_alloc_hook file_redirect_hook
+        run: ninja -C build-android main
 
       - name: Collect
         if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         run: |
           STRIP="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"
           mkdir -p dist
-          for t in main hook_impl main_hook gsl_alloc_hook file_redirect_hook; do
-            so="$(find build-android -name "lib${t}.so" | head -1)"
-            if [ -z "$so" ]; then
-              echo "lib${t}.so not produced" >&2
-              exit 1
-            fi
-            "$STRIP" --strip-unneeded "$so" -o "dist/lib${t}.so"
-          done
+          so="$(find build-android -name "libmain.so" | head -1)"
+          if [ -z "$so" ]; then
+            echo "libmain.so not produced" >&2
+            exit 1
+          fi
+          "$STRIP" --strip-unneeded "$so" -o "dist/libmain.so"
           ls -l dist
 
       - uses: actions/upload-artifact@v4
