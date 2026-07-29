@@ -3,7 +3,7 @@ name: emucore
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 21 * * 5"
+    - cron: "0 21 * * *"
   push:
     branches: [winnative]
 
@@ -32,6 +32,7 @@ jobs:
           submodules: recursive
 
       - name: Sync upstream
+        id: sync
         if: github.event_name != 'push'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -53,13 +54,16 @@ jobs:
           after=$(git rev-parse HEAD)
           if [ "$before" = "$after" ]; then
             echo "Already up to date with upstream."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
           git submodule update --init --recursive
           git push origin "HEAD:$SYNC_BRANCH"
           echo "Merged $(git rev-list --count $before..$after) upstream commit(s)."
 
       - name: Install toolchain
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         run: |
           "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --install "ndk;${NDK_VERSION}" > /dev/null
           sudo apt-get update -qq
@@ -67,6 +71,7 @@ jobs:
           echo "NDK=$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
 
       - name: Configure
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         run: |
           cmake -G Ninja -B build-android -S . \
             -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" \
@@ -80,9 +85,11 @@ jobs:
             -DUSE_RETRO_ACHIEVEMENTS=ON
 
       - name: Build
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         run: ninja -C build-android main hook_impl main_hook gsl_alloc_hook file_redirect_hook
 
       - name: Collect
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         run: |
           STRIP="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"
           mkdir -p dist
@@ -97,12 +104,14 @@ jobs:
           ls -l dist
 
       - uses: actions/upload-artifact@v4
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         with:
           name: emucore
           path: dist/*.so
           if-no-files-found: error
 
       - name: Publish release
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
