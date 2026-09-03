@@ -314,11 +314,6 @@ public:
   static SamplerState GetSamplerState(u32 index, float custom_tex_scale, bool custom_tex,
                                       bool has_arbitrary_mips);
 
-  static void RenderPaletteEntry(u32 texel_buffer_offset, const RcTcacheEntry& entry,
-                                 AbstractTexture* texture, TLUTFormat tlutfmt);
-  static void RenderReinterpretEntry(const RcTcacheEntry& entry, AbstractTexture* texture,
-                                     TextureFormat old_format, TextureFormat new_format);
-
 protected:
   // Decodes the specified data to the GPU texture specified by entry.
   // Returns false if the configuration is not supported.
@@ -365,11 +360,9 @@ private:
 
   RcTcacheEntry GetXFBFromCache(u32 address, u32 width, u32 height, u32 stride);
 
-  std::pair<RcTcacheEntry, u32> CreatePaletteEntryWithOffset(const RcTcacheEntry& entry,
-                                                             const u8* palette);
+  RcTcacheEntry ApplyPaletteToEntry(RcTcacheEntry& entry, const u8* palette, TLUTFormat tlutfmt);
 
-  RcTcacheEntry CreateReinterpretEntry(const RcTcacheEntry& existing_entry,
-                                       TextureFormat new_format);
+  RcTcacheEntry ReinterpretEntry(const RcTcacheEntry& existing_entry, TextureFormat new_format);
 
   RcTcacheEntry DoPartialTextureUpdates(RcTcacheEntry& entry_to_update, const u8* palette,
                                         TLUTFormat tlutfmt);
