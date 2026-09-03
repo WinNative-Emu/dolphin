@@ -59,8 +59,9 @@ jobs:
             outside=$(echo "$conflicts" | grep -vE '^\.github/workflows/' || true)
             if [ -n "$outside" ]; then
               git merge --abort || git reset --hard "$before"
-              echo "::warning::Upstream merge conflicts; $SYNC_BRANCH left untouched. Resolve by hand, then re-run."
-              echo "$outside" | sed 's/^/::warning::  /'
+              echo "::error::Upstream merge conflicts; $SYNC_BRANCH left untouched. Resolve by hand, then re-run."
+              echo "$outside" | sed 's/^/::error::  /'
+              echo "conflict=true" >> "$GITHUB_OUTPUT"
               echo "changed=false" >> "$GITHUB_OUTPUT"
               exit 0
             fi
@@ -211,3 +212,9 @@ jobs:
           gh release upload latest dist/*.so source.sha --clobber
           gh release edit latest --notes "Rolling; newest immutable tag: $tag"
           echo "$tag"
+
+      - name: Fail if the upstream sync was left unresolved
+        if: always() && steps.sync.outputs.conflict == 'true'
+        run: |
+          echo "::error::Upstream sync is stalled: $SYNC_BRANCH is still at $(git rev-parse --short HEAD) and is no longer tracking upstream. Resolve the conflicts listed above by hand, then re-run."
+          exit 1
