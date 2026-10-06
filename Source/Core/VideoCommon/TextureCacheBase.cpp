@@ -1231,7 +1231,7 @@ private:
   std::vector<Level> levels;
 };
 
-TCacheEntry* TextureCacheBase::Load(u32 stage)
+RcTcacheEntry TextureCacheBase::Load(u32 stage)
 {
   if (auto entry = LoadImpl(stage, false))
   {
@@ -1240,19 +1240,19 @@ TCacheEntry* TextureCacheBase::Load(u32 stage)
       return entry;
     }
 
-    InvalidateTexture(GetTexCacheIter(entry));
+    InvalidateTexture(GetTexCacheIter(entry.get()));
     return LoadImpl(stage, true);
   }
 
   return nullptr;
 }
 
-TCacheEntry* TextureCacheBase::LoadImpl(u32 stage, bool force_reload)
+RcTcacheEntry TextureCacheBase::LoadImpl(u32 stage, bool force_reload)
 {
   // if this stage was not invalidated by changes to texture registers, keep the current texture
   if (!force_reload && TMEM::IsValid(stage) && m_bound_textures[stage])
   {
-    TCacheEntry* entry = m_bound_textures[stage].get();
+    const auto& entry = m_bound_textures[stage];
     // If the TMEM configuration is such that this texture is more or less guaranteed to still
     // be in TMEM, then we know we can reuse the old entry without even hashing the memory
     //
@@ -1300,7 +1300,7 @@ TCacheEntry* TextureCacheBase::LoadImpl(u32 stage, bool force_reload)
   TMEM::Bind(texture_info.GetStage(), entry->NumBlocksX(), entry->NumBlocksY(),
              entry->GetNumLevels() > 1, entry->format == TextureFormat::RGBA8);
 
-  return entry.get();
+  return entry;
 }
 
 RcTcacheEntry TextureCacheBase::GetTexture(const int textureCacheSafetyColorSampleSize,
